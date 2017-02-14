@@ -1,19 +1,3 @@
-/*************************************************** 
-  This is an example for the Adafruit Thermocouple Sensor w/MAX31855K
-
-  Designed specifically to work with the Adafruit Thermocouple Sensor
-  ----> https://www.adafruit.com/products/269
-
-  These displays use SPI to communicate, 3 pins are required to  
-  interface
-  Adafruit invests time and resources providing this open source code, 
-  please support Adafruit and open-source hardware by purchasing 
-  products from Adafruit!
-
-  Written by Limor Fried/Ladyada for Adafruit Industries.  
-  BSD license, all text above must be included in any redistribution
- ****************************************************/
-
 #include <SPI.h>
 #include "Adafruit_MAX31855.h"
 
@@ -45,26 +29,33 @@ void setup() {
 }
 
 void loop() {
-  Serial.print("Setpoint = ");
-  Serial.println(s);
-  if (Serial.available()>0){
-      s  = ((Serial.readString().toDouble()));
-      }
-  if (s == 0){
-    Serial.println("Enter setpoint");
-    delay(1000);
-  }
-  else {
+  setpoint();
+  //if setpoint is given.
+  if(s != 0) {
   sensor();
-  e = s-c; 
-  Serial.print("Error = ");
-  Serial.println(e);
+  error();
   control();
   delay(1000);
   }
 }
 
+void setpoint(){  
+  //demand first input.
+  if (s == 0){
+    Serial.println("Please enter setpoint");
+    delay(1000);
+  }
+  //keep checking input.
+  if (Serial.available()>0){
+    s  = ((Serial.readString().toDouble()));
+  }
+  //Display input.
+  Serial.print("Setpoint = ");
+  Serial.println(s);
+}
+
 void control(){
+  //basic comparison in error.
   if (e > -2) {
     digitalWrite(6, LOW);
     }
@@ -87,4 +78,11 @@ void sensor(){
    }
    //Serial.print("F = ");
    //Serial.println(thermocouple.readFarenheit());
+  }
+
+void error(){
+  //Difference between setpoint and sensed value.
+  e = s-c; 
+  Serial.print("Error = ");
+  Serial.println(e);
   }
