@@ -1,0 +1,90 @@
+/*************************************************** 
+  This is an example for the Adafruit Thermocouple Sensor w/MAX31855K
+
+  Designed specifically to work with the Adafruit Thermocouple Sensor
+  ----> https://www.adafruit.com/products/269
+
+  These displays use SPI to communicate, 3 pins are required to  
+  interface
+  Adafruit invests time and resources providing this open source code, 
+  please support Adafruit and open-source hardware by purchasing 
+  products from Adafruit!
+
+  Written by Limor Fried/Ladyada for Adafruit Industries.  
+  BSD license, all text above must be included in any redistribution
+ ****************************************************/
+
+#include <SPI.h>
+#include "Adafruit_MAX31855.h"
+
+// Default connection is using software SPI, but comment and uncomment one of
+// the two examples below to switch between software SPI and hardware SPI:
+
+// Example creating a thermocouple instance with software SPI on any three
+// digital IO pins.
+#define MAXDO   3
+#define MAXCS   4
+#define MAXCLK  5
+double c,s,e;
+
+// initialize the Thermocouple
+Adafruit_MAX31855 thermocouple(MAXCLK, MAXCS, MAXDO);
+
+// Example creating a thermocouple instance with hardware SPI
+// on a given CS pin.
+//#define MAXCS   10
+//Adafruit_MAX31855 thermocouple(MAXCS);
+
+void setup() {
+  while (!Serial); // wait for Serial on Leonardo/Zero, etc
+  pinMode(6, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("MAX31855 test");
+  // wait for MAX chip to stabilize
+  delay(500);
+}
+
+void loop() {
+  Serial.print("Setpoint = ");
+  Serial.println(s);
+  if (Serial.available()>0){
+      s  = ((Serial.readString().toDouble()));
+      }
+  if (s == 0){
+    Serial.println("Enter setpoint");
+    delay(1000);
+  }
+  else {
+  sensor();
+  e = s-c; 
+  Serial.print("Error = ");
+  Serial.println(e);
+  control();
+  delay(1000);
+  }
+}
+
+void control(){
+  if (e > -2) {
+    digitalWrite(6, LOW);
+    }
+  if (e > 2) {
+    digitalWrite(6, HIGH);
+    }
+  }
+  
+void sensor(){
+  // basic readout test, just print the current temp
+   Serial.print("Internal Temp = ");
+   Serial.println(thermocouple.readInternal());
+
+   c = thermocouple.readCelsius();
+   if (isnan(c)) {
+     Serial.println("Something wrong with thermocouple!");
+   } else {
+     Serial.print("C = "); 
+     Serial.println(c);
+   }
+   //Serial.print("F = ");
+   //Serial.println(thermocouple.readFarenheit());
+  }
