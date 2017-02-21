@@ -10,6 +10,7 @@
 #define MAXCS   4
 #define MAXCLK  5
 double c,s,e;
+int OnTime, OffTime, cont = 0;
 
 // initialize the Thermocouple
 Adafruit_MAX31855 thermocouple(MAXCLK, MAXCS, MAXDO);
@@ -26,6 +27,10 @@ void setup() {
   Serial.println("MAX31855 test");
   // wait for MAX chip to stabilize
   delay(500);
+  Serial.println("Introduce los segundos de apagado: ");
+  OffTime = getNumber();
+  Serial.println("Introduce los segundos de encendido: ");
+  OnTime = getNumber();
 }
 
 void loop() {
@@ -60,7 +65,14 @@ void control(){
     digitalWrite(6, LOW);
     }
   if (e > 2) {
-    digitalWrite(6, HIGH);
+      while (cont < OffTime){
+        cont++;
+        digitalWrite(6, LOW);  
+      }
+      while (cont < OnTime){
+        cont++;
+        digitalWrite(6, HIGH);
+      }
     }
   }
   
@@ -86,3 +98,10 @@ void error(){
   Serial.print("Error = ");
   Serial.println(e);
   }
+
+int getNumber(){
+  int secs = Serial.read();
+  secs = (secs * 1000) / 12;
+  return secs;
+}
+
