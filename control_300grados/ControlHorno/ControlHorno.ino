@@ -65,6 +65,7 @@ void control(){
     digitalWrite(6, LOW);
     }
   if (e > 2) {
+    cont = 0;
       while (cont < OffTime){
         cont++;
         digitalWrite(6, LOW);  
