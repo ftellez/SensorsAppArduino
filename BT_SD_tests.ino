@@ -74,10 +74,10 @@ void setup() {
   File datalogFile = SD.open("zcrypt.txt", FILE_WRITE);
   if (datalogFile) {
     datalogFile.println("Test");
-    datalogFile.println("Temp / Hum / Tiempo / Voltaje");
+    datalogFile.println("Tiempo / Voltaje / Temperatura / Humedad");
     datalogFile.close();
     Serial.println("Test");
-    Serial.println("Temp / Hum / Tiempo / Voltaje");
+    Serial.println("Tiempo / Voltaje / Temperatura / Humedad");
   } else { Serial.println("Error opening .txt"); }
 
   
@@ -115,7 +115,7 @@ void loop() {
   if(LastTime <= CurrentTime) { // If stuff was typed in the serial monitor
     LastTime = CurrentTime;
     segundosEjec = CurrentTime / 1000.0;
-    datalog += (String)segundosEjec + "," + (String)voltage + ","; 
+    datalog = (String)segundosEjec + "," + (String)voltage + "," + datalog; 
     sendingSensLog(datalog);
   }
 
