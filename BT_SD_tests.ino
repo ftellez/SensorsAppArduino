@@ -92,12 +92,12 @@ void loop() {
 
   //Temperature 
   dht.temperature().getEvent(&dht11);
-  if (isnan(dht11.temperature)) { datalog += "X,"; }
+  if (isnan(dht11.temperature)) { datalog += "-10,"; }
   else { datalog += (String) dht11.temperature + ","; }
 
   //Humidity 
   dht.humidity().getEvent(&dht11);
-  if (isnan(dht11.relative_humidity)){ datalog += "X,"; }
+  if (isnan(dht11.relative_humidity)){ datalog += "-10,"; }
   else { datalog += (String) dht11.relative_humidity + ","; }
   
   if (millisActual > millisAnterior){
