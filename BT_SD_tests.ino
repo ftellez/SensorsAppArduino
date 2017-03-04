@@ -127,7 +127,7 @@ void loop() {
     Serial.println(datalog);
   } else { Serial.println("Error opening .txt"); }
   
-  delay(700);
+  delay(1000);
   
 }
 
