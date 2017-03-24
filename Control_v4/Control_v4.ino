@@ -47,13 +47,13 @@ int millisAnterior = 0;
 int millisOverflow = 0;
 
 //-----SD stuff
-const int CS = 4;                 //Chip select
+const int CS = 8;                 //Chip select
 File datalogFile;                 //Datalog File 
 
 //-----Temperature sensors stuff
-const float max_temp = 60;        // adjust this setpoint
-const float min_temp = 40;        // adjust this setpoint
-const float min_speed = 10;       // adjust this setpoint
+const float max_temp = 30;        // adjust this setpoint
+const float min_temp = 20;        // adjust this setpoint
+const float min_speed = 0;       // adjust this setpoint
 float temp_hot_plate = 0;
 float temp_body = 0, speed_KMpH = 0;
 
@@ -61,7 +61,7 @@ float temp_body = 0, speed_KMpH = 0;
 SoftwareSerial bluetooth(2, 3);  //TX-O(Pin D2), RX-I (Pin D3)
 
 //-----Other component stuff 
-const int gate_MOSFET = 9;       // Mostfate gate; current control
+const int gate_MOSFET = 5;       // Mostfate gate; current control
 
 void setup() {
     Serial.begin(9600);  // Set Serial Monitor baud rate to 115200 too
@@ -133,11 +133,11 @@ void loop() {
   }
 
   // Read plate's temperature for the first time and measure speed 
-  temp_hot_plate = ( 5.0 * analogRead(A1) * 100.0) / 1024; // Sensor 2
+  temp_hot_plate = ( 5.0 * analogRead(A0) * 100.0) / 1024; // Sensor 2
   temp_body = 0, speed_KMpH;
   if (GPS.fix) { speed_KMpH = GPS.speed * 1.852; }       // GPS working ?
   bool temp_good = temp_hot_plate <= max_temp;    // temperature less than setpoint to stop?
-  bool speed_good = speed_KMpH > min_speed;      // moving?
+  bool speed_good = speed_KMpH >= min_speed;      // moving?
   
   // Sentence received? cheksum and parse it. Failed to parse it? wait for another
   if (GPS.newNMEAreceived()) { if (!GPS.parse(GPS.lastNMEA())) { return; } }
@@ -153,23 +153,26 @@ void loop() {
     digitalWrite(gate_MOSFET, LOW);
     logData();
     // check conditions 
+    Serial.println("1");
     temp_good = temp_hot_plate <= max_temp;    // Reached highest temperature yet? 
-    speed_good = speed_KMpH > min_speed;      // Still moving ? 
+    speed_good = speed_KMpH >= min_speed;      // Still moving ? 
     // Do nothing I guess...? 
   } 
   
   while (temp_good && speed_good) {          // You are under 60° C, and moving at least at 10km/h
     digitalWrite(gate_MOSFET, HIGH);         // Allow current to flow through the peltiers 
     logData();
+    Serial.println("2");
     // check conditions 
     temp_good = temp_hot_plate <= max_temp;    // Reached highest temperature yet? 
-    speed_good = speed_KMpH > min_speed;      // Still moving ? 
+    speed_good = speed_KMpH >= min_speed;      // Still moving ? 
   } 
   
   while (!temp_good && speed_good) { 
-    digitalWrite(gate_MOSFET, LOW);
+    digitalWrite(gate_MOSFET, HIGH); //to low
     logData();
     // check conditions
+    //Serial.println("3");
     temp_good = temp_hot_plate <= min_temp;    // Reached minimal high temperature yet? 
     speed_good = speed_KMpH > min_speed;      // Still moving ? 
   }
@@ -182,15 +185,15 @@ void logData() {
     
     //--GPS Stuff
     Serial.print("Fix: "); Serial.println((int)GPS.fix);
-    if (GPS.fix) {
+   // if (GPS.fix) {
       float speed_KMpH = GPS.speed * 1.852; // Speed is given in knots, so we have to convert it
       Serial.print("Speed (Km/H): "); Serial.println(speed_KMpH);
       datalog += (String) speed_KMpH + ",";
-    } else { datalog +=  "0,"; }
+    //} else { datalog +=  "0,"; }
 
     //--Temperature sensors
-    temp_body = ( 5.0 * analogRead(A0) * 100.0) / 1024; // Sensor 1 
-    temp_hot_plate = ( 5.0 * analogRead(A1) * 100.0) / 1024; // Sensor 2
+    temp_body = ( 5.0 * analogRead(A1) * 100.0) / 1024; // Sensor 1 
+    temp_hot_plate = ( 5.0 * analogRead(A0) * 100.0) / 1024; // Sensor 2
     datalog += (String) temp_body + "," + (String) temp_hot_plate + ","; 
     Serial.print("Body temperature: "); Serial.println(temp_body);
     Serial.print("Hot plate temperature: "); Serial.println(temp_hot_plate);

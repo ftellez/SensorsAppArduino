@@ -35,6 +35,7 @@
 #include <SoftwareSerial.h>
 #include <SPI.h>
 #include <SD.h>
+#include <TimeLib.h>
 
 //-----GPS stuff
 #define GPSSerial Serial1     // Name of hardware serial port Serial .--> arduino uno, Serial1 --> Arduino micro
@@ -71,6 +72,9 @@ void setup() {
   //-----Begin
   Serial.begin(9600); // Set Serial Monitor baud rate to 115200 too
   //while (!Serial);    // Do not start until serial monitor is open 
+
+  //-----Time
+  setTime(0,0,0,0,0,0);
   
   //-----SD Card
   Serial.print("Init SD card...");
@@ -79,10 +83,10 @@ void setup() {
   
   datalogFile = SD.open("mdata.txt", FILE_WRITE); // Add header to file
   if (datalogFile) {
-    datalogFile.println("Test");
+    datalogFile.println("Test Fin");
     datalogFile.println("Time / Speed  / Body Temp / Peltier Temp");
     datalogFile.close();
-    Serial.println("Test");
+    //Serial.println("Test");
     Serial.println("Time / Speed  / Body Temp / Peltier Temp");
   } else { Serial.println("Error opening .txt"); }
   
@@ -91,16 +95,16 @@ void setup() {
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);  // Turn on RMC (recommended minimum) and GGA (fix data)
   //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); // Turn on only the "minimum recommended" data
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);     // Set update rate to 1 kHz. Recommended for the parsing code to work correctly and sort through data
-  GPS.sendCommand(PGCMD_ANTENNA);                // Request updates on antenna status, comment out to keep quiet
-  GPSSerial.println(PMTK_Q_RELEASE);             // Ask for firmware version
+  //GPS.sendCommand(PGCMD_ANTENNA);                // Request updates on antenna status, comment out to keep quiet
+//  GPSSerial.println(PMTK_Q_RELEASE);             // Ask for firmware version
   delay(1000);
   
   //----Bluetooth
-  bluetooth.print("$");                        // Print three times individually
-  bluetooth.print("$");
-  bluetooth.print("$");                        // Enter command mode
-  delay(100);                                  // Short delay, wait for the Mate to send back CMD
-  bluetooth.println("U,9600,N");               // Temporarily Change the baudrate to 9600, no parity
+//  bluetooth.print("$");                        // Print three times individually
+//  bluetooth.print("$");
+//  bluetooth.print("$");                        // Enter command mode
+//  delay(100);                                  // Short delay, wait for the Mate to send back CMD
+//  bluetooth.println("U,9600,N");               // Temporarily Change the baudrate to 9600, no parity
   bluetooth.begin(9600);                       // Start bluetooth serial at 9600, 115200 baud rate can be too fast to relay data reliability. 
   //Serial.print("Hit any key to start");
   //while (Serial.available() && Serial.read()); // Empty buffer //MOD "mySerial"
@@ -191,16 +195,16 @@ void loop() {
 
 void logData() {
   
-  int millisActual = millis();           
-  // This is to be able to send information to the app without timer_two_sec wrapping around
-  if (millisActual > millisAnterior){
-    millisAnterior = millisActual;
-    CurrentTime = ((millisOverflow * 65535.0) + (millisActual + 32768.0)) - 32768.0;
-  } else {
-    millisOverflow++;
-    millisAnterior = millisActual;
-    CurrentTime = ((millisOverflow * 65535.0) + (millisActual + 32768.0)) - 32768;
-  }
+//  int millisActual = millis();           
+//  // This is to be able to send information to the app without timer_two_sec wrapping around
+//  if (millisActual > millisAnterior){
+//    millisAnterior = millisActual;
+//    CurrentTime = ((millisOverflow * 65535.0) + (millisActual + 32768.0)) - 32768.0;
+//  } else {
+//    millisOverflow++;
+//    millisAnterior = millisActual;
+//    CurrentTime = ((millisOverflow * 65535.0) + (millisActual + 32768.0)) - 32768;
+//  }
 
   String datalog = ""; // To write on the SD card and send data through BT
   
@@ -220,17 +224,14 @@ void logData() {
     temp_hot_plate = 0; 
     temp_body = ( 5.0 * analogRead(A1) * 100.0) / 1024;      // Sensor 1 
     temp_hot_plate = ( 5.0 * analogRead(A0) * 100.0) / 1024; // Sensor 2
-    datalog += (String) temp_body + "," + (String) temp_hot_plate; 
+    datalog += (String) temp_body + "," + (String) temp_hot_plate + ","; 
     Serial.print("Body temperature: "); Serial.println(temp_body);
     Serial.print("Hot plate temperature: "); Serial.println(temp_hot_plate);
     Serial.println();
     
-    if(LastTime <= CurrentTime) { // If stuff was typed in the serial monitor
-      LastTime = CurrentTime;
-      double segundosEjec = CurrentTime / 1000.0;
-      datalog = (String)segundosEjec + "," + datalog; 
-      sendingSensLog(datalog);
-    }
+    double segundosEjec = hour()*3600.0 + minute()*60.0 + second();
+    datalog = (String)segundosEjec + "," + datalog; 
+    sendingSensLog(datalog);
         
     //--Add data to file 
     datalogFile = SD.open("mdata.txt", FILE_WRITE);
@@ -240,7 +241,6 @@ void logData() {
       Serial.print("SD Datos Guardados : ");
       Serial.println(datalog); 
     } else { Serial.println("Error opening mdata.txt"); 
-    
     }
   }
 }
