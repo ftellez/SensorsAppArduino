@@ -195,16 +195,16 @@ void loop() {
 
 void logData() {
   
-//  int millisActual = millis();           
+  int millisActual = millis();           
 //  // This is to be able to send information to the app without timer_two_sec wrapping around
-//  if (millisActual > millisAnterior){
-//    millisAnterior = millisActual;
+  if (millisActual > millisAnterior){
+    millisAnterior = millisActual;
 //    CurrentTime = ((millisOverflow * 65535.0) + (millisActual + 32768.0)) - 32768.0;
-//  } else {
+  } else {
 //    millisOverflow++;
-//    millisAnterior = millisActual;
+    millisAnterior = millisActual;
 //    CurrentTime = ((millisOverflow * 65535.0) + (millisActual + 32768.0)) - 32768;
-//  }
+  }
 
   String datalog = ""; // To write on the SD card and send data through BT
   
