@@ -88,13 +88,21 @@ void control() {
     desactVarTemp = true;
   }
   if (e > 2) {
+    Serial.println("Error mayor a 2 grados.");
     if (!desactVarTemp) {
+      Serial.println("Temperatura por steps.");
+      Serial.print("millisActual : ");
+      Serial.println(millisActual);
+      Serial.print("millisAnterior : ");
+      Serial.println(millisAnterior);
       if ((millisActual - millisAnterior) >= 10000 && onTemp) {
+        Serial.println("Relay Apagado.");
         onTemp = false;
         millisAnterior = millisActual;
         digitalWrite(13, LOW);
       }
       if ((millisActual - millisAnterior) >= 5000 && !onTemp) {
+        Serial.println("Relay Encendido.");
         onTemp = true;
         millisAnterior = millisActual;
         digitalWrite(13, HIGH);
