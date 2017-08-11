@@ -24,7 +24,7 @@ Adafruit_MAX31855 thermocouple(MAXCLK, MAXCS, MAXDO);
 
 void setup() {
   while (!Serial); // wait for Serial on Leonardo/Zero, etc
-  pinMode(13, OUTPUT);
+  pinMode(2, OUTPUT);
   Serial.begin(9600);
   Serial.println("MAX31855 test");
   // wait for MAX chip to stabilize
@@ -33,14 +33,16 @@ void setup() {
 
 void loop() {
   millisActual = millis();
-  setpoint();
   //if setpoint is given.
   if (s != 0) {
     sensor();
     error();
-    control();
+    desactVarTemp = control(desactVarTemp);
     delay(1000);
+  } else {
+    desactVarTemp = false;
   }
+  setpoint();
 }
 
 void setpoint() {
@@ -81,34 +83,41 @@ void error() {
   Serial.println(e);
 }
 
-void control() {
+bool control(bool chkStep) {
   //basic comparison in error.
-  if (e > -2) {
-    digitalWrite(13, LOW);
-    desactVarTemp = true;
+  if (e < -2) {
+    digitalWrite(2, LOW);
+    return true;
   }
   if (e > 2) {
-    Serial.println("Error mayor a 2 grados.");
-    if (!desactVarTemp) {
-      Serial.println("Temperatura por steps.");
-      Serial.print("millisActual : ");
-      Serial.println(millisActual);
-      Serial.print("millisAnterior : ");
-      Serial.println(millisAnterior);
+//    Serial.println("Error mayor a 2 grados.");
+    if (!chkStep) {
+//      Serial.println("Temperatura por steps.");
+//      Serial.print("millisActual : ");
+//      Serial.println(millisActual);
+//      Serial.print("millisAnterior : ");
+//      Serial.println(millisAnterior);
       if ((millisActual - millisAnterior) >= 10000 && onTemp) {
+        Serial.println("--------------");
         Serial.println("Relay Apagado.");
+        Serial.println("--------------");
         onTemp = false;
         millisAnterior = millisActual;
-        digitalWrite(13, LOW);
+        digitalWrite(2, LOW);
+        Serial.println(">>>>>>>>>Apagado hecho.<<<<<<<<");
       }
       if ((millisActual - millisAnterior) >= 5000 && !onTemp) {
+        Serial.println("--------------");
         Serial.println("Relay Encendido.");
+        Serial.println("--------------");
         onTemp = true;
         millisAnterior = millisActual;
-        digitalWrite(13, HIGH);
+        digitalWrite(2, HIGH);
+        Serial.println(">>>>>>>>>Encendido hecho.<<<<<<<<");
       }
     } else {
-      digitalWrite(13, HIGH);
+      digitalWrite(2, HIGH);
     }
+    return chkStep;
   }
 }
